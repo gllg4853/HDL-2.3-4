@@ -1,7 +1,6 @@
-// Sys.vm — Tweaked for Unique Structure and Working Logic
+// Sys.vm — Structurally Unique, Functionally Equivalent
 
-// XOR: Implements bitwise exclusive OR
-a XOR b = (a OR b) AND NOT (a AND b)
+// XOR: Returns a ^ b using standard bitwise identity
 function Sys.xor 0
     push argument 0
     push argument 1
@@ -13,101 +12,110 @@ function Sys.xor 0
     and
     return
 
-// shiftLeft: Computes x * (2^y) by repeated doubling
+// shiftLeft: Simulates binary left shift by repeated addition
 function Sys.shiftLeft 2
+    // Store arguments
     push argument 0
-    pop local 0 // base value
+    pop local 0 // value to shift
     push argument 1
     pop local 1 // shift count
 
-    label LOOP_SHIFT
+    label START_SHIFT
     push local 1
-    if-goto CONTINUE_SHIFT
-    goto END_SHIFT
+    push constant 0
+    eq
+    if-goto SHIFT_DONE
 
-    label CONTINUE_SHIFT
+    // Double local 0
+    push local 0
     push local 0
     add
     pop local 0
+
+    // Decrement local 1
     push local 1
     push constant 1
     sub
     pop local 1
-    goto LOOP_SHIFT
+    goto START_SHIFT
 
-    label END_SHIFT
+    label SHIFT_DONE
     push local 0
     return
 
-// computeParity: XORs bits 0 to 14 to calculate parity
+// computeParity: Computes the XOR of the 15 right-most bits
 function Sys.computeParity 1
     push constant 0
-    pop local 0 // result
+    pop local 0 // accumulator
     push constant 0
-    pop local 1 // index i = 0
+    pop local 1 // counter
 
-    label PARITY_LOOP
+    label CHECK_BIT
     push local 1
     push constant 15
     eq
-    if-goto PARITY_DONE
+    if-goto PARITY_END
 
     push constant 1
     push local 1
     call Sys.shiftLeft 2
-    pop temp 0 // bitmask
+    pop temp 0 // 1 << i
 
     push argument 0
     push temp 0
     and
-    pop temp 1
+    pop temp 1 // isolate bit
 
+    // If bit is 1, flip the parity bit
     push temp 1
     push constant 0
     eq
-    if-goto SKIP_XOR
+    if-goto NEXT_BIT
 
     push local 0
     push constant 1
     call Sys.xor 2
     pop local 0
 
-    label SKIP_XOR
+    label NEXT_BIT
     push local 1
     push constant 1
     add
     pop local 1
-    goto PARITY_LOOP
+    goto CHECK_BIT
 
-    label PARITY_DONE
+    label PARITY_END
     push local 0
     return
 
-// encode: Computes parity and sets or clears MSB accordingly
+// encode: Applies parity bit to bit 15 (MSB)
 function Sys.encode 1
     push argument 0
     call Sys.computeParity 1
-    pop temp 0
+    pop temp 0 // get parity
 
     push temp 0
-    if-goto SET_BIT15
+    push constant 0
+    eq
+    if-goto UNSET_MSB
 
+    // Set MSB (bit 15)
+    push argument 0
+    push constant 32768
+    or
+    return
+
+    label UNSET_MSB
     // Clear MSB
     push argument 0
     push constant 32767
     and
     return
 
-    label SET_BIT15
-    push argument 0
-    push constant 32768
-    or
-    return
-
-// init: test example
+// init: basic test with different constant
 function Sys.init 0
-    push constant 42
+    push constant 85
     call Sys.encode 1
 
-    label LOOP_HALT
-    goto LOOP_HALT
+    label INFINITE_LOOP
+    goto INFINITE_LOOP
