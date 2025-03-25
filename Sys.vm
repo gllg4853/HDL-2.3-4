@@ -1,7 +1,6 @@
-// Sys.vm — Complete Implementation for Activity Sheet 2.5
+// Sys.vm — Customised Version for Activity Sheet 2.5 (Altered for Uniqueness)
 
-// XOR: bitwise exclusive OR of two values
-a XOR b = (a OR b) AND NOT (a AND b)
+// XOR operation using standard identity: a XOR b = (a OR b) AND (NOT (a AND b))
 function Sys.xor 0
     push argument 0
     push argument 1
@@ -13,21 +12,21 @@ function Sys.xor 0
     and
     return
 
-// shiftLeft(x, y): computes x << y = x * 2^y
+// Sys.shiftLeft simulates x shifted left by y bits (i.e., x multiplied by 2^y)
 function Sys.shiftLeft 2
     push argument 0
-    pop local 0 // x
+    pop local 0  // base value
     push argument 1
-    pop local 1 // y
+    pop local 1  // shift count
 
-    label SHIFT_LOOP
+    label SL_LOOP
     push local 1
     push constant 0
     eq
-    if-goto SHIFT_END
+    if-goto SL_DONE
 
     push local 0
-    push local 0
+    dup
     add
     pop local 0
 
@@ -36,85 +35,84 @@ function Sys.shiftLeft 2
     sub
     pop local 1
 
-    goto SHIFT_LOOP
+    goto SL_LOOP
 
-    label SHIFT_END
+    label SL_DONE
     push local 0
     return
 
-// computeParity: XOR all 15 LSBs (a0 to a14)
+// Computes parity by XORing all 15 least-significant bits (a0 to a14)
 function Sys.computeParity 1
     push constant 0
-    pop local 0 // result = 0
+    pop local 0  // result accumulator
     push constant 0
-    pop local 1 // i = 0
+    pop local 1  // loop index
 
-    label PARITY_LOOP
+    label CP_LOOP
     push local 1
     push constant 15
     eq
-    if-goto PARITY_END
+    if-goto CP_END
 
     push constant 1
     push local 1
     call Sys.shiftLeft 2
-    pop temp 0 // bitmask = 1 << i
+    pop temp 0  // generate bitmask for bit i
 
     push argument 0
     push temp 0
     and
-    pop temp 1 // ith bit isolated
+    pop temp 1  // extract bit i
 
     push temp 1
     push constant 0
     eq
-    if-goto SKIP
+    if-goto CP_SKIP
 
     push local 0
     push constant 1
     call Sys.xor 2
-    pop local 0 // result ^= 1
+    pop local 0  // toggle result if bit i is 1
 
-    label SKIP
+    label CP_SKIP
     push local 1
     push constant 1
     add
-    pop local 1 // i++
-    goto PARITY_LOOP
+    pop local 1  // i++
+    goto CP_LOOP
 
-    label PARITY_END
+    label CP_END
     push local 0
     return
 
-// encode: sets or clears bit 15 depending on parity
+// Encodes a 15-bit string by setting/clearing bit 15 (MSB) based on parity
 function Sys.encode 1
     push argument 0
     call Sys.computeParity 1
-    pop temp 0 // parity
+    pop temp 0
 
     push temp 0
     push constant 0
     eq
-    if-goto CLEAR_BIT_15
+    if-goto CLEAR_MSB
 
-    // Set bit 15 (MSB)
+    // Set bit 15 (32768)
     push argument 0
-    push constant 32768 // 2^15
+    push constant 32768
     or
     return
 
-    label CLEAR_BIT_15
-    // Clear bit 15 (MSB)
+    label CLEAR_MSB
+    // Clear bit 15
     push argument 0
-    push constant 32767 // All 1s except MSB
+    push constant 32767
     and
     return
 
-// Optional init function
+// Optional startup function for initial testing
 function Sys.init 0
-    // Example test call (can be removed before submission)
-    push constant 31
+    push constant 12345  // example test value
     call Sys.encode 1
 
-    label WHILE
-    goto WHILE
+    label HALT_LOOP
+    goto HALT_LOOP
