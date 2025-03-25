@@ -1,20 +1,15 @@
 // Sys.vm — Complete Implementation for Activity Sheet 2.5
 
 // XOR: bitwise exclusive OR of two values
+a XOR b = (a OR b) AND NOT (a AND b)
 function Sys.xor 0
     push argument 0
     push argument 1
     or
-    pop temp 0
-
     push argument 0
     push argument 1
     and
     not
-    pop temp 1
-
-    push temp 0
-    push temp 1
     and
     return
 
@@ -25,11 +20,11 @@ function Sys.shiftLeft 2
     push argument 1
     pop local 1 // y
 
-    label LOOP
+    label SHIFT_LOOP
     push local 1
     push constant 0
     eq
-    if-goto END
+    if-goto SHIFT_END
 
     push local 0
     push local 0
@@ -41,24 +36,24 @@ function Sys.shiftLeft 2
     sub
     pop local 1
 
-    goto LOOP
+    goto SHIFT_LOOP
 
-    label END
+    label SHIFT_END
     push local 0
     return
 
 // computeParity: XOR all 15 LSBs (a0 to a14)
 function Sys.computeParity 1
     push constant 0
-    pop local 0 // result
+    pop local 0 // result = 0
     push constant 0
-    pop local 1 // i
+    pop local 1 // i = 0
 
-    label LOOP
+    label PARITY_LOOP
     push local 1
     push constant 15
     eq
-    if-goto END
+    if-goto PARITY_END
 
     push constant 1
     push local 1
@@ -85,9 +80,9 @@ function Sys.computeParity 1
     push constant 1
     add
     pop local 1 // i++
-    goto LOOP
+    goto PARITY_LOOP
 
-    label END
+    label PARITY_END
     push local 0
     return
 
@@ -100,23 +95,26 @@ function Sys.encode 1
     push temp 0
     push constant 0
     eq
-    if-goto CLEAR
+    if-goto CLEAR_BIT_15
 
-    // Set MSB (bit 15) to 1
-    push constant 32768 // 2^15
+    // Set bit 15 (MSB)
     push argument 0
+    push constant 32768 // 2^15
     or
     return
 
-    label CLEAR
-    // Clear MSB (bit 15) to 0
-    push constant 32767 // All 1s except MSB
+    label CLEAR_BIT_15
+    // Clear bit 15 (MSB)
     push argument 0
+    push constant 32767 // All 1s except MSB
     and
     return
 
-// Optional: init function to run something at start
-default function Sys.init 0
-    // Can add test code here if needed
+// Optional init function
+function Sys.init 0
+    // Example test call (can be removed before submission)
+    push constant 31
+    call Sys.encode 1
+
     label WHILE
     goto WHILE
